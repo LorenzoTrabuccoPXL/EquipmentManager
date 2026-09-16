@@ -1,0 +1,17 @@
+# Visual Studio en .NET
+**/.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Vue en Node
+**/node_modules/
+**/dist/
+**/.vite/
+.env
+.env.*
+*.log
+
+# JetBrains
+**/.idea/
