@@ -1,11 +1,13 @@
 ﻿using EquipmentManager.Application.Services;
 using EquipmentManager.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EquipmentManager.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserSettingsController : ControllerBase
     {
         private readonly UserSettingsService _userSettingsService;
@@ -45,6 +47,7 @@ namespace EquipmentManager.WebAPI.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("Update")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -57,6 +60,7 @@ namespace EquipmentManager.WebAPI.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("Delete/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

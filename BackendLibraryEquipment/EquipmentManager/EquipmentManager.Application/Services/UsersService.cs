@@ -70,6 +70,8 @@ namespace EquipmentManager.Application.Services
                 if (user == null)
                     throw new ArgumentNullException(nameof(user), "User cannot be null.");
 
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash ?? string.Empty);
+
                 await _usersRepository.AddAsync(user);
             }
             catch (Exception ex)

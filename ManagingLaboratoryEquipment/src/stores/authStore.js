@@ -28,8 +28,11 @@ export const useAuthStore = defineStore('auth', () => {
       if (!response || typeof response !== 'object') {
         throw new Error('The login response did not contain account information.')
       }
+      if (!response.token) {
+        throw new Error('The login response did not contain an authentication token.')
+      }
       currentUser.value = {
-        hashedId: response.hashedId || '',
+        id: response.id ?? null,
         firstName: response.firstName || '',
         lastName: response.lastName || '',
         email: response.email || credentials.email,
@@ -38,7 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
       sessionStorage.setItem(USER_KEY, JSON.stringify(currentUser.value))
       sessionStorage.setItem('ems_auth', 'true')
-      if (response.token) sessionStorage.setItem('ems_token', response.token)
+      sessionStorage.setItem('ems_token', response.token)
       return currentUser.value
     } catch (requestError) {
       error.value = requestError.message || 'Unable to sign in.'

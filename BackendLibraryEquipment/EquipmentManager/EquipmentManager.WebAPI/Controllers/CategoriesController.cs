@@ -1,11 +1,13 @@
 ﻿using EquipmentManager.Application.Services;
 using EquipmentManager.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EquipmentManager.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CategoriesController : ControllerBase
     {
         private readonly CategoriesService _categoriesService;

@@ -1,6 +1,10 @@
 using EquipmentManager.Application.Contracts;
 using EquipmentManager.Application.Services;
 using EquipmentManager.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +32,40 @@ builder.Services.AddScoped<NotificationsService>();
 builder.Services.AddScoped<TechniciansService>();
 builder.Services.AddScoped<UsersService>();
 builder.Services.AddScoped<UserSettingsService>();
+
+string jwtKey = builder.Configuration["Jwt:Key"]
+    ?? builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("JWT key is niet ingesteld.");
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+
+        options.DefaultChallengeScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey =
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+
+            NameClaimType = ClaimTypes.Email,
+            RoleClaimType = ClaimTypes.Role,
+
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
 {
@@ -57,6 +95,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("VueClient");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

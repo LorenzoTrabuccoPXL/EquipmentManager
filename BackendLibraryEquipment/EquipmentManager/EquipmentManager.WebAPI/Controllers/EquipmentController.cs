@@ -1,5 +1,6 @@
 ﻿using EquipmentManager.Application.Services;
 using EquipmentManager.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -8,6 +9,7 @@ namespace EquipmentManager.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EquipmentController : ControllerBase
     {
         private readonly EquipmentService _equipmentService;
@@ -51,6 +53,7 @@ namespace EquipmentManager.WebAPI.Controllers
         }
 
         // PUT api/<EquipmentController>/5
+        [Authorize(Roles = "Admin")]
         [HttpPut("Update")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,6 +67,7 @@ namespace EquipmentManager.WebAPI.Controllers
         }
 
         // DELETE api/<EquipmentController>/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("Delete/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)] 

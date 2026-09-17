@@ -1,10 +1,14 @@
 ﻿using EquipmentManager.Application.Services;
 using EquipmentManager.Domain;
 using EquipmentManager.WebAPI.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EquipmentManager.WebAPI.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
     public class AuthController : ControllerBase
     {
         private readonly UsersService _usersService;
@@ -16,7 +20,7 @@ namespace EquipmentManager.WebAPI.Controllers
             _configuration = configuration;
         }
 
-
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {
@@ -34,13 +38,11 @@ namespace EquipmentManager.WebAPI.Controllers
 
             Users user = await _usersService.GetByEmailAsync(request.Email);
 
-            string hashedId = BCrypt.Net.BCrypt.HashPassword(user.UserId.ToString());
-
             string jwt = await _usersService.GenerateJwtToken(user, _configuration);
 
             return Ok(new LoginResponseDTO
             {
-                HashedId = hashedId,
+                Id = user.UserId,
                 FirstName = user.Firstname,
                 LastName = user.Lastname,
                 Email = user.Email,
