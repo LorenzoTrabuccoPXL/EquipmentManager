@@ -1,0 +1,116 @@
+﻿-- SQL Server: voer na 01_CreateCase.sql uit. Alleen voor lege tabellen.
+-- Bron: src/data/equipment.js en de standaardinstellingen uit settingsStore.js.
+-- Namen zijn opgesplitst in FirstName en LastName.
+-- De demo heeft geen echte wachtwoordhash: PasswordHash blijft NULL.
+-- Stel een wachtwoord in via de toekomstige backend voordat database-login mogelijk is.
+-- Meldingen worden in het project dynamisch gegenereerd en worden hier niet verzonnen.
+USE ManagingLaboratoryEquipment;
+GO
+SET XACT_ABORT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+IF EXISTS (SELECT 1 FROM dbo.Categories)
+OR EXISTS (SELECT 1 FROM dbo.Locations)
+OR EXISTS (SELECT 1 FROM dbo.Technicians)
+OR EXISTS (SELECT 1 FROM dbo.Equipment)
+OR EXISTS (SELECT 1 FROM dbo.MaintenanceRecords)
+OR EXISTS (SELECT 1 FROM dbo.Users)
+OR EXISTS (SELECT 1 FROM dbo.UserSettings)
+OR EXISTS (SELECT 1 FROM dbo.Notifications)
+    THROW 50001, N'Vulcase vereist lege tabellen. Er zijn geen gegevens toegevoegd.', 1;
+
+SET IDENTITY_INSERT dbo.Categories ON;
+INSERT INTO dbo.Categories (CategoryId, Name) VALUES
+(1, N'Manufacturing'),
+(2, N'Utilities'),
+(3, N'Material Handling'),
+(4, N'Automation');
+SET IDENTITY_INSERT dbo.Categories OFF;
+
+SET IDENTITY_INSERT dbo.Locations ON;
+INSERT INTO dbo.Locations (LocationId, Name) VALUES
+(1, N'Building A – Bay 3'),
+(2, N'Compressor Room'),
+(3, N'Assembly Hall'),
+(4, N'Building B – Bay 1'),
+(5, N'Plastics Wing'),
+(6, N'Building A – Bay 7'),
+(7, N'Warehouse Zone C'),
+(8, N'Fabrication Shop');
+SET IDENTITY_INSERT dbo.Locations OFF;
+
+SET IDENTITY_INSERT dbo.Technicians ON;
+INSERT INTO dbo.Technicians (TechnicianId, FirstName, LastName) VALUES
+(1, N'Maria', N'Santos'),
+(2, N'James', N'Okafor'),
+(3, N'David', N'Lee'),
+(4, N'Aisha', N'Nkosi');
+SET IDENTITY_INSERT dbo.Technicians OFF;
+
+SET IDENTITY_INSERT dbo.Equipment ON;
+INSERT INTO dbo.Equipment (EquipmentId, Name, Model, SerialNumber, CategoryId, LocationId, Status, TechnicianId, PurchaseDate, PurchasePrice, WarrantyExpiry, LastMaintenance, NextMaintenance, Description) VALUES
+(1, N'CNC Milling Machine A1', N'Haas VF-2', N'HVF2-2021-0041', 1, 1, N'active', 1, N'2021-03-10', 84000, N'2026-03-10', N'2026-08-15', N'2026-11-15', N'High-precision 3-axis vertical milling center used for prototype and production machining.'),
+(2, N'Industrial Air Compressor', N'Atlas Copco GA 30', N'AC-GA30-2020-112', 2, 2, N'active', 2, N'2020-11-05', 18500, N'2025-11-05', N'2026-07-22', N'2026-10-22', N'Rotary screw compressor supplying compressed air to the entire facility at 8 bar.'),
+(3, N'Overhead Bridge Crane', N'Demag KBK 5T', N'DM-KBK-2019-008', 3, 3, N'maintenance', 3, N'2019-06-20', 62000, N'2024-06-20', N'2026-09-01', N'2026-09-20', N'5-tonne overhead bridge crane for heavy component assembly and material movement.'),
+(4, N'Laser Cutter LX-500', N'Trumpf TruLaser 3030', N'TRU-3030-2022-077', 1, 4, N'active', 1, N'2022-01-18', 215000, N'2027-01-18', N'2026-09-05', N'2026-12-05', N'CO₂ laser cutting machine for sheet metal up to 20 mm thick. 4000 W power.'),
+(5, N'Injection Moulding Press', N'Engel Victory 200', N'ENG-V200-2018-033', 1, 5, N'offline', 3, N'2018-09-12', 145000, N'2023-09-12', N'2026-06-30', N'2026-09-30', N'200-tonne clamping force injection moulding machine for thermoplastic components.'),
+(6, N'Industrial Robot Arm R2', N'KUKA KR 60 HA', N'KK-KR60-2023-015', 4, 6, N'active', 4, N'2023-04-03', 98000, N'2028-04-03', N'2026-08-28', N'2026-11-28', N'6-axis articulated robot for high-accuracy assembly and welding tasks. 60 kg payload.'),
+(7, N'Forklift – Electric FE3', N'Toyota 8FBET18', N'TY-8FBE-2020-204', 3, 7, N'maintenance', 2, N'2020-07-14', 32000, N'2025-07-14', N'2026-09-08', N'2026-09-15', N'Electric counterbalance forklift, 1.8-tonne capacity. Battery-operated with fast charging.'),
+(8, N'Welding Station W4', N'Lincoln Electric Power Wave S500', N'LE-PWS500-2021-088', 1, 8, N'active', 4, N'2021-08-22', 12500, N'2026-08-22', N'2026-07-10', N'2026-10-10', N'Advanced multi-process welding system supporting MIG, TIG, and stick welding up to 500 A.');
+SET IDENTITY_INSERT dbo.Equipment OFF;
+
+SET IDENTITY_INSERT dbo.MaintenanceRecords ON;
+INSERT INTO dbo.MaintenanceRecords (MaintenanceRecordId, EquipmentId, MaintenanceDate, MaintenanceType, TechnicianId, Notes) VALUES
+(1, 1, N'2026-08-15', N'Preventive', 1, N'Replaced spindle bearings, lubricated all axes, calibrated tool offsets.'),
+(2, 1, N'2026-05-02', N'Corrective', 2, N'Fixed coolant pump seal leak. Replaced filter.'),
+(3, 1, N'2026-02-10', N'Preventive', 1, N'Full service – cleaned way guides, tightened gib strips.'),
+(4, 2, N'2026-07-22', N'Preventive', 2, N'Changed oil and filter, inspected belts, checked pressure relief valve.'),
+(5, 2, N'2026-04-18', N'Preventive', 2, N'Air filter replacement, drain valve serviced.'),
+(6, 3, N'2026-09-01', N'Corrective', 3, N'Hoist motor overheating – motor windings under inspection. Crane out of service.'),
+(7, 3, N'2026-06-10', N'Preventive', 3, N'Annual inspection, wire rope replaced, limit switches tested.'),
+(8, 3, N'2026-03-05', N'Preventive', 2, N'Gearbox oil change, brake shoes inspected.'),
+(9, 4, N'2026-09-05', N'Preventive', 1, N'Lens cleaning, beam alignment verified, assist gas pressures calibrated.'),
+(10, 4, N'2026-06-12', N'Preventive', 1, N'Filter pack replaced, resonator mirrors cleaned.'),
+(11, 5, N'2026-06-30', N'Corrective', 3, N'Hydraulic pump failure. Machine offline pending part delivery.'),
+(12, 5, N'2026-03-15', N'Preventive', 3, N'Hydraulic fluid change, screw and barrel inspection.'),
+(13, 5, N'2025-12-20', N'Preventive', 2, N'Annual service – mould temperature controller calibrated.'),
+(14, 6, N'2026-08-28', N'Preventive', 4, N'Joint grease replenishment, TCP calibration, safety scanner tested.'),
+(15, 6, N'2026-05-14', N'Preventive', 4, N'Firmware update applied, teach pendant checked.'),
+(16, 7, N'2026-09-08', N'Corrective', 2, N'Battery cells showing reduced capacity. Scheduled for cell replacement.'),
+(17, 7, N'2026-07-01', N'Preventive', 2, N'Tyre inspection, brake adjustment, hydraulic level topped up.'),
+(18, 8, N'2026-07-10', N'Preventive', 4, N'Contact tips and nozzle replaced, wire feed motor cleaned.'),
+(19, 8, N'2026-04-05', N'Preventive', 4, N'Full inspection, ground cable checked, liner replaced.');
+SET IDENTITY_INSERT dbo.MaintenanceRecords OFF;
+
+SET IDENTITY_INSERT dbo.Users ON;
+INSERT INTO dbo.Users (UserId, FirstName, LastName, Email, PasswordHash, Role, Phone) VALUES
+(1, N'Admin', N'Manager', N'admin@company.com', NULL, N'Administrator', N'+44 20 1234 5678');
+SET IDENTITY_INSERT dbo.Users OFF;
+
+INSERT INTO dbo.UserSettings (UserId, ItemsPerPage, DateFormat, OverdueAlerts, UpcomingAlerts, OfflineAlerts, EmailDigest, ReminderDays, DefaultTechnicianId) VALUES
+(1, 5, N'dd MMM yyyy', 1, 1, 1, 0, 7, NULL);
+
+COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    -- Ruim eventuele sessie-instelling op na een mislukte INSERT.
+    SET IDENTITY_INSERT dbo.Categories OFF;
+    SET IDENTITY_INSERT dbo.Locations OFF;
+    SET IDENTITY_INSERT dbo.Technicians OFF;
+    SET IDENTITY_INSERT dbo.Equipment OFF;
+    SET IDENTITY_INSERT dbo.MaintenanceRecords OFF;
+    SET IDENTITY_INSERT dbo.Users OFF;
+    THROW;
+END CATCH;
+GO
+-- Verwachte aantallen: 4, 8, 4, 8, 19, 1, 1, 0.
+SELECT N'Categories' AS TableName, COUNT(*) AS RowCount FROM dbo.Categories
+UNION ALL SELECT N'Locations', COUNT(*) FROM dbo.Locations
+UNION ALL SELECT N'Technicians', COUNT(*) FROM dbo.Technicians
+UNION ALL SELECT N'Equipment', COUNT(*) FROM dbo.Equipment
+UNION ALL SELECT N'MaintenanceRecords', COUNT(*) FROM dbo.MaintenanceRecords
+UNION ALL SELECT N'Users', COUNT(*) FROM dbo.Users
+UNION ALL SELECT N'UserSettings', COUNT(*) FROM dbo.UserSettings
+UNION ALL SELECT N'Notifications', COUNT(*) FROM dbo.Notifications;
+GO

@@ -1,0 +1,111 @@
+-- SQL Server: voer dit script eerst uit in SSMS of Azure Data Studio.
+-- Maakt een database indien nodig. Bestaande tabellen worden NIET verwijderd.
+USE master;
+GO
+IF DB_ID(N'ManagingLaboratoryEquipment') IS NULL
+    EXEC(N'CREATE DATABASE ManagingLaboratoryEquipment');
+GO
+USE ManagingLaboratoryEquipment;
+GO
+SET XACT_ABORT ON;
+BEGIN TRY
+    BEGIN TRANSACTION;
+
+    CREATE TABLE dbo.Categories (
+        CategoryId INT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(100) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE dbo.Locations (
+        LocationId INT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(200) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE dbo.Technicians (
+        TechnicianId INT IDENTITY(1,1) PRIMARY KEY,
+        FirstName NVARCHAR(100) NOT NULL,
+        LastName NVARCHAR(100) NOT NULL
+    );
+
+    CREATE TABLE dbo.Equipment (
+        EquipmentId INT IDENTITY(1,1) PRIMARY KEY,
+        Name NVARCHAR(150) NOT NULL,
+        Model NVARCHAR(150) NOT NULL,
+        SerialNumber NVARCHAR(100) NOT NULL UNIQUE,
+        CategoryId INT NOT NULL REFERENCES dbo.Categories(CategoryId),
+        LocationId INT NOT NULL REFERENCES dbo.Locations(LocationId),
+        Status NVARCHAR(20) NOT NULL DEFAULT N'active'
+            CHECK (Status IN (N'active', N'maintenance', N'offline')),
+        TechnicianId INT NULL REFERENCES dbo.Technicians(TechnicianId),
+        PurchaseDate DATE NULL,
+        PurchasePrice DECIMAL(12,2) NULL CHECK (PurchasePrice >= 0),
+        WarrantyExpiry DATE NULL,
+        LastMaintenance DATE NULL,
+        NextMaintenance DATE NULL,
+        Description NVARCHAR(MAX) NULL
+    );
+
+    CREATE TABLE dbo.MaintenanceRecords (
+        MaintenanceRecordId INT IDENTITY(1,1) PRIMARY KEY,
+        EquipmentId INT NOT NULL REFERENCES dbo.Equipment(EquipmentId),
+        MaintenanceDate DATE NOT NULL,
+        MaintenanceType NVARCHAR(20) NOT NULL
+            CHECK (MaintenanceType IN (N'Preventive', N'Corrective')),
+        TechnicianId INT NOT NULL REFERENCES dbo.Technicians(TechnicianId),
+        Notes NVARCHAR(MAX) NOT NULL
+    );
+
+    CREATE TABLE dbo.Users (
+        UserId INT IDENTITY(1,1) PRIMARY KEY,
+        FirstName NVARCHAR(100) NOT NULL,
+        LastName NVARCHAR(100) NOT NULL,
+        Email NVARCHAR(254) NOT NULL UNIQUE,
+        -- NULL betekent: nog geen wachtwoord ingesteld, login niet toestaan.
+        -- Laat de backend een geschikte wachtwoordhash genereren.
+        PasswordHash NVARCHAR(255) NULL,
+        Role NVARCHAR(50) NOT NULL DEFAULT N'Administrator',
+        Phone NVARCHAR(30) NULL
+    );
+
+    CREATE TABLE dbo.UserSettings (
+        UserId INT PRIMARY KEY REFERENCES dbo.Users(UserId),
+        ItemsPerPage INT NOT NULL DEFAULT 5 CHECK (ItemsPerPage > 0),
+        DateFormat NVARCHAR(30) NOT NULL DEFAULT N'dd MMM yyyy',
+        OverdueAlerts BIT NOT NULL DEFAULT 1,
+        UpcomingAlerts BIT NOT NULL DEFAULT 1,
+        OfflineAlerts BIT NOT NULL DEFAULT 1,
+        EmailDigest BIT NOT NULL DEFAULT 0,
+        ReminderDays INT NOT NULL DEFAULT 7 CHECK (ReminderDays >= 0),
+        DefaultTechnicianId INT NULL REFERENCES dbo.Technicians(TechnicianId)
+    );
+
+    CREATE TABLE dbo.Notifications (
+        NotificationId INT IDENTITY(1,1) PRIMARY KEY,
+        UserId INT NOT NULL REFERENCES dbo.Users(UserId),
+        EquipmentId INT NOT NULL REFERENCES dbo.Equipment(EquipmentId),
+        EventType NVARCHAR(30) NOT NULL
+            CHECK (EventType IN (N'overdue', N'upcoming', N'offline', N'maintenance')),
+        Severity NVARCHAR(20) NOT NULL CHECK (Severity IN (N'danger', N'warning')),
+        Title NVARCHAR(150) NOT NULL,
+        Message NVARCHAR(MAX) NOT NULL,
+        IsRead BIT NOT NULL DEFAULT 0,
+        CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    );
+
+    CREATE INDEX IX_Equipment_CategoryId ON dbo.Equipment(CategoryId);
+    CREATE INDEX IX_Equipment_LocationId ON dbo.Equipment(LocationId);
+    CREATE INDEX IX_Equipment_TechnicianId ON dbo.Equipment(TechnicianId);
+    CREATE INDEX IX_Equipment_NextMaintenance ON dbo.Equipment(NextMaintenance);
+    CREATE INDEX IX_MaintenanceRecords_EquipmentDate ON dbo.MaintenanceRecords(EquipmentId, MaintenanceDate);
+    CREATE INDEX IX_MaintenanceRecords_TechnicianId ON dbo.MaintenanceRecords(TechnicianId);
+    CREATE INDEX IX_UserSettings_DefaultTechnicianId ON dbo.UserSettings(DefaultTechnicianId);
+    CREATE INDEX IX_Notifications_UserRead ON dbo.Notifications(UserId, IsRead);
+    CREATE INDEX IX_Notifications_EquipmentId ON dbo.Notifications(EquipmentId);
+
+    COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+GO
